@@ -1,0 +1,86 @@
+- name: Install LEMP stack on Ubuntu 22.04
+  hosts: all
+  become: true
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Install MySQL Server
+      apt:
+        name: mysql-server
+        state: present
+
+    - name: Install PHP8.1-fpm 
+      apt:
+        apt:
+        name: "{{item}}"
+        state: present
+        update_cache: yes
+      loop:
+          - php-fpm
+          - php-mysql
+
+    - name: Start Nginx service
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Start MySQL service
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Start PHP-FPM service
+      service:
+        name: php8.1-fpm
+        state: started
+        enabled: yes
+
+    - name: Create info.php file
+      command: echo "<?php phpinfo(); ?>" | sudo tee /var/www/html/info.php
+      
+    - name: Adjust Nginx server block configuration
+      copy:
+        dest: /etc/nginx/sites-available/default
+        mode: '0644'
+        content: |
+          server {
+              listen 80 default_server;
+              listen [::]:80 default_server;
+              root /var/www/html;
+              index index.php index.html index.htm index.nginx-debian.html;
+
+              server_name _;
+
+              location / {
+                  try_files $uri $uri/ =404;
+              }
+
+              location ~ \.php$ {
+                  include snippets/fastcgi-php.conf;
+                  fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+                  fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                  include fastcgi_params;
+              }
+
+              location ~ /\.ht {
+                  deny all;
+              }
+          }
+        
+
+    - name: Restart nginx service
+      service:
+        name: nginx
+        state: restarted
+
+

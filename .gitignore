@@ -1,0 +1,4 @@
+index.php
+*.log
+sample.html
+./Ansible/private.pem
