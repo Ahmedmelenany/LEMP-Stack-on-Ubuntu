@@ -6,6 +6,7 @@ This document provides steps to set up a LEMP (Linux, Nginx, MySQL, PHP) stack o
 
 - [Ansible Configuration](./Ansible)
 - [Bash Scripting](./Bash-script/)
+- [Monitoring](./Monitoring/)
 - [Prerequisites](#prerequisites)
 - [Installation Steps](#installation-steps)
   - [Step 1: Update the System](#step-1-update-the-system)
