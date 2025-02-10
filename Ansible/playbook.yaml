@@ -2,10 +2,10 @@
   hosts: all
   become: true
   tasks:
-    - name: Update apt cache
+    - name: Update all packages to latest
       apt:
-        update_cache: yes
-        cache_valid_time: 3600
+        name: "*"
+        state: latest
 
     - name: Install Nginx
       apt:
@@ -19,13 +19,13 @@
 
     - name: Install PHP8.1-fpm 
       apt:
-        apt:
-        name: "{{item}}"
+        name: "{{ item }}"
         state: present
         update_cache: yes
       loop:
-          - php-fpm
-          - php-mysql
+          - php8.1-fpm
+          - php8.1-mysql
+          - php8.1
 
     - name: Start Nginx service
       service:
@@ -45,9 +45,6 @@
         state: started
         enabled: yes
 
-    - name: Create info.php file
-      command: echo "<?php phpinfo(); ?>" | sudo tee /var/www/html/info.php
-      
     - name: Adjust Nginx server block configuration
       copy:
         dest: /etc/nginx/sites-available/default
@@ -76,11 +73,58 @@
                   deny all;
               }
           }
-        
+      notify:
+        - Restart Nginx
 
-    - name: Restart nginx service
+    - name: Copy Index To Remote Machine
+      copy:
+        src: /home/ahmed/week8/index.php
+        dest: /var/www/html
+        mode: '0644'
+    
+    - name: Install Python for mysqldb
+      apt:
+        name: python3-mysqldb
+        state: present
+  
+    - name: Create a new database with name 'viewsdb'
+      community.mysql.mysql_db:
+        name: viewsdb
+        state: present
+    
+    - name: Create database user with name 'bob' and password '1234' with all database privileges
+      community.mysql.mysql_user:
+        name: bob
+        password: 1234
+        priv: '*.*:ALL'
+        state: present
+    
+    - name: Install Firewalld
+      apt:
+        name: firewalld
+        state: present
+
+    - name: Start Firewalld service
+      service:
+        name: firewalld
+        state: started
+        enabled: yes
+    
+    - name: permit traffic in default zone for https service
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: true
+        state: enabled
+        immediate: true
+      loop:
+          - http
+          - https
+          - ssh
+
+
+
+  handlers:
+    - name: Restart Nginx
       service:
         name: nginx
         state: restarted
-
-
