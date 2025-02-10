@@ -4,7 +4,7 @@
 This guide provides step-by-step instructions to install and set up Ansible on an Ubuntu master node.
 
 ## Prerequisites
-- Ubuntu 20.04/22.04 LTS
+- Ubuntu 22.04 
 - Sudo privileges
 - Internet connection
 - Python 3 and pip (installed by default on Ubuntu, but verify using `python3 --version`)
